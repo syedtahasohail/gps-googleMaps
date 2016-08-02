@@ -5,10 +5,11 @@ import time
 import threading
 import httplib
 import json
+import sys
 from subprocess import call
 
-
-call (['sudo', 'gpsd', '-F', '/var/run/gpsd.sock /dev/ttyAMA0'])
+# GPS Settings
+call (['sudo', 'gpsd', '-F', '/var/run/gpsd.sock', '/dev/ttyAMA0'])
 #seting the global variable
 gpsd = None
 
@@ -17,14 +18,16 @@ gpsd = None
 os.system('clear') 
 
 
-#clear the terminal (optional) 
 class GpsPoller(threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
-    global gpsd #bring it in scope
-    gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+    #bring it in scope
+    global gpsd 
+    #starting the stream of info
+    gpsd = gps(mode=WATCH_ENABLE) 
     self.current_value = None
-    self.running = True #setting the thread running to true
+    self.running = True 
+    #setting the thread running to true
  
   def run(self):
     global gpsd
@@ -65,23 +68,31 @@ if __name__ == '__main__':
       print
       print 'sats        ' , gpsd.satellites
 
-      #POST request on Local Server
+      #Creating connection with local server
       conn = httplib.HTTPConnection("192.168.0.199:8001")
       headers = {'Content-type': 'application/json'}
+
+      #Making the data ready
       foo = {'lat': gpsd.fix.latitude,
       'lng': gpsd.fix.longitude
       }
 
-      #JSON format
-      json_foo = json.dumps(foo)
-      conn.request("POST", "/location", json_foo, headers)
-      response = conn.getresponse()
-      print response.status, response.reason
-      data = response.read()
-      data
-      conn.close()
-      time.sleep(5)
-      #set to whatever
+      
+      try:
+        json_foo = json.dumps(foo)
+        #POST data on local server.
+        conn.request("POST", "/location", json_foo, headers)
+        response = conn.getresponse()
+        print response.status, response.reason
+        data = response.read()
+        data
+        conn.close()
+        # GET GPS coordinates after every 2 seconds
+        time.sleep(2)
+              
+      except: 
+        print 'Server not ready.'
+        sys.exit()
  
   except (KeyboardInterrupt, SystemExit):
   #when you press ctrl+c

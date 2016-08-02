@@ -6,6 +6,7 @@ var server = require('http').createServer(app);
 app.use(bodyParser.json());
 var data = {};
 
+//GET Request for latLng.
 app.get('/location', function (req, res){
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.send(data);
@@ -14,7 +15,7 @@ app.get('/location', function (req, res){
   res.status(400).json(e);
 });
 
-
+// POST request for latLng.
 app.post('/location/', function (req, res) {
   data.lat = req.body.lat;
   data.lng = req.body.lng;
@@ -27,7 +28,9 @@ app.post('/location/', function (req, res) {
 
   console.log('Latitude: ' +data.lat);
   console.log('Longitude: '+data.lng);
+  res.send('Data Received');
   res.status(200).send();
+
 }, function (e) {
   res.status(400).send();
 });
