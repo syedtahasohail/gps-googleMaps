@@ -3,7 +3,7 @@
   <head>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <meta charset="utf-8">
-  <title>BRT Location</title>
+  <title>My GeoLocation</title>
     <style>
       html,
       body,
@@ -22,34 +22,34 @@
     
     <script>
       var map;
-      var delay = 2000;
+      var delay = 200000;
       var marker; 
 
-      //GET request from Local Server.
       function updatePosition() {
           $.ajax({
               url: "http://192.168.0.199:8001/location",
               dataType: 'json'
           })
-          .done(function (data) {
+          .done(function callDone(data) {
+              
               var latLng = new google.maps.LatLng( data.lat, data.lng );
-              map.setCenter(marker.getPosition());
+              
               marker.setPosition( latLng );
+               // call the function again
+              console.log(latLng);
               console.log(data);
-
-              //Call the updatePosition after ever 2 seconds.
               setTimeout( updatePosition, delay );
           });
           
       }
 
-      //Initialize Google Maps API
       function initMap() {
-        var myLatlng = new google.maps.LatLng(0, 0);
+        var myLatlng = new google.maps.LatLng(24.8271875, 67.033915);
         var mapOptions = {
-          zoom: 20,
+          zoom: 14,
           center: myLatlng
         };
+
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         marker = new google.maps.Marker({
             position: myLatlng,
