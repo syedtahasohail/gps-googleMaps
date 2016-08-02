@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>My GeoLocation</title>
+    <style>
+      html,
+      body,
+      #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+  </head>
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+  
+  <body>
+    <div id="map-canvas"></div>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSA_hN9-v-wGyRwvXHNSuk7DxTCSnOpbM&callback=initMap"></script>
+    
+    <script>
+      var map;
+      var delay = 200000;
+      var marker; 
+
+      function updatePosition() {
+          $.ajax({
+              url: "http://192.168.0.199:8001/location",
+              dataType: 'json'
+          })
+          .done(function callDone(data) {
+              
+              var latLng = new google.maps.LatLng( data.lat, data.lng );
+              
+              marker.setPosition( latLng );
+               // call the function again
+              console.log(latLng);
+              console.log(data);
+              setTimeout( updatePosition, delay );
+          });
+          
+      }
+
+      function initMap() {
+        var myLatlng = new google.maps.LatLng(24.8271875, 67.033915);
+        var mapOptions = {
+          zoom: 14,
+          center: myLatlng
+        };
+
+        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+        marker = new google.maps.Marker({
+            position: myLatlng,
+            map: map,
+            title: 'BRT'
+        });
+
+        updatePosition();
+      }
+      google.maps.event.addDomListener(window, 'load', initMap);
+        </script>
+  </body>
+
+</html>
