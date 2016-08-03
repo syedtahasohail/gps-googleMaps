@@ -12,11 +12,9 @@ from subprocess import call
 call (['sudo', 'gpsd', '-F', '/var/run/gpsd.sock', '/dev/ttyAMA0'])
 #seting the global variable
 gpsd = None
-
  
 #clear the terminal (optional)
 os.system('clear') 
-
 
 class GpsPoller(threading.Thread):
   def __init__(self):
@@ -87,7 +85,7 @@ if __name__ == '__main__':
         data = response.read()
         data
         conn.close()
-        # GET GPS coordinates after every 2 seconds
+        # GPS coordinates after every 2 seconds
         time.sleep(2)
               
       except: 
