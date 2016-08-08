@@ -1,2 +1,2 @@
-# gsm-googleMaps
-Integration of NEO 6m GSM with Google Maps API
+# gps-googleMaps
+Integration of NEO 6M GPS with Google Maps API
