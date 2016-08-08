@@ -22,7 +22,7 @@
    
     <script>
       var map;
-      var delay = 2000;
+      var delay = 6000;
       var marker; 
       var marker1; 
       var infoWindow;
@@ -92,7 +92,7 @@
             if (infoWindow !== undefined )
               infoWindow.close();
               infoWindow = new google.maps.InfoWindow({
-              content: 'From: '+originList[0]+' to '+destinationList[0]+'<br>'+'Distance: '+results[0].distance.text+'<br> Time: '+results[0].duration.text
+              content: 'From: '+originList[0]+' to '+destinationList[0]+'<br>'+'Distance: '+results[0].distance.text+'<br> Time: '+results[0].duration.text+' without traffic.'
             });
             
             infoWindow.open(map,marker1);

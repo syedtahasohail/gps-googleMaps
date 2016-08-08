@@ -4,6 +4,8 @@ var app = express();
 var server = require('http').createServer(app);
 
 app.use(bodyParser.json());
+app.use(express.static('public'));
+
 var data = {};
 
 //GET Request for latLng.
@@ -21,15 +23,14 @@ app.post('/location/', function (req, res) {
   data.lng = req.body.lng;
 
   if (isNaN(data.lat))
-  data.lat = JSON.parse(data.lat(/\bNaN\b/g, "null"));
+    data.lat = JSON.parse(data.lat(/\bNaN\b/g, "null"));
 
   if(isNaN(data.lng))
-  data.lng = JSON.parse(data.lng(/\bNaN\b/g, "null"));
+    data.lng = JSON.parse(data.lng(/\bNaN\b/g, "null"));
 
-  console.log('Latitude: ' +data.lat);
-  console.log('Longitude: '+data.lng);
-  res.send('Data Received');
-  res.status(200).send();
+  console.log('(lat, lng): (' +data.lat+', '+data.lng+')');
+  
+  res.status(200).send('Data Received');
 
 }, function (e) {
   res.status(400).send();
