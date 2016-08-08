@@ -62,10 +62,7 @@
       }
 
       function distanceMatrix (service){
-        console.log('Marker: '+marker.getPosition());
-        console.log('Marker1: ' +marker1.getPosition());
         var originList, destinationList, results;
-
         service.getDistanceMatrix ({
           origins: [marker.getPosition()],
           destinations: [marker1.getPosition()],
