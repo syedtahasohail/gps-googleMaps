@@ -1,31 +1,29 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>BRT Location</title>
-    <style>
-      html,
-      body,
-      #map-canvas {
-        height: 100%;
-        margin: 0px;
-        padding: 0px
-      }
-    </style>
-  </head>
-  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
-  
-  <body>
-    <div id="map-canvas"></div>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSA_hN9-v-wGyRwvXHNSuk7DxTCSnOpbM&callback=initMap"></script>
-   
-    <script>
-      var map;
-      var delay = 2000;
-      var marker; 
-      var marker1; 
-      var infoWindow;
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>BRT Location</title>
+  <style>
+    html,
+    body,
+    #map-canvas {
+      height: 100%;
+      margin: 0px;
+      padding: 0px
+    }
+  </style>
+</head>
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+
+<body>
+  <div id="map-canvas"></div>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBSA_hN9-v-wGyRwvXHNSuk7DxTCSnOpbM&callback=initMap"></script>
+
+  <script>
+      var mapvar, marker, marker1, infoWindow, line; 
+      var delay = 6000;
               
       //GET request from Local Server.
       function updatePosition() {
@@ -36,9 +34,9 @@
           .done(function (data) {
               var latLng = new google.maps.LatLng(data.lat, data.lng);
               marker.setPosition(latLng);
-              map.setCenter(marker.getPosition());
+              map.setCenter(latLng);
               
-              //Call the updatePosition after every 2 seconds.
+              //Call the updatePosition after every 6 seconds.
               setTimeout(updatePosition, delay);
           });
          
@@ -62,7 +60,10 @@
       }
 
       function distanceMatrix (service){
+        console.log('Marker: '+marker.getPosition());
+        console.log('Marker1: ' +marker1.getPosition());
         var originList, destinationList, results;
+
         service.getDistanceMatrix ({
           origins: [marker.getPosition()],
           destinations: [marker1.getPosition()],
@@ -82,20 +83,46 @@
             for (var i = 0 ; i < originList.length ; i ++){
               results = response.rows[i].elements;
             }
-                console.log(results[0].distance.text);
-                results[0].duration.text;
-                
-        }
+            var lineSymbol = {
+                path: 'M 0,-1 0,1',
+                strokeOpacity: 1,
+                scale: 4
+              };
+
+            if (line == undefined){
+              line = new google.maps.Polyline({
+                  path: [{lat: marker.getPosition().lat(), 
+                          lng: marker.getPosition().lng()},
+                          {lat: marker1.getPosition().lat(), 
+                            lng: marker1.getPosition().lng()}
+                        ],
+                  strokeOpacity: 0,
+                  icons: [{
+                    icon: lineSymbol,
+                    offset: '0',
+                    repeat: '20px'
+                  }],
+                  map: map
+                });
+              }
+            else {
+            var path = [{lat: marker.getPosition().lat(),
+                         lng: marker.getPosition().lng()}, 
+                         {lat: marker1.getPosition().lat(), 
+                          lng: marker1.getPosition().lng()}
+                       ];
+            line.setPath(path);
+          }
+          }
+
             if (infoWindow !== undefined )
               infoWindow.close();
               infoWindow = new google.maps.InfoWindow({
-              content: 'From: '+originList[0]+' to '+destinationList[0]+'<br>'+'Distance: '+results[0].distance.text+'<br> Time: '+results[0].duration.text
+              content: '<strong>From</strong>: '+'<p style="font-size:14px">'+originList[0]+'</p>'+' <strong>to</strong> '+'<p style="font-size:14px">'+destinationList[0]+'</p>'+'<br>'+'<strong>Distance</strong>: '+'<p style="font-size:14px">'+results[0].distance.text+'</p>'+'<br> <strong>Time</strong>: '+'<p style="font-size:14px">'+results[0].duration.text+' without traffic.</p>'
             });
             
             infoWindow.open(map,marker1);
-        
-        
-      
+
     });
   }
 
@@ -122,6 +149,6 @@
       }
       google.maps.event.addDomListener(marker1, 'click', function() {window.location.href = marker.url;}, window, 'load', initMap);
         </script>
-  </body>
+</body>
 
 </html>
