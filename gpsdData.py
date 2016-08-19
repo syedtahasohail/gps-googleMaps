@@ -41,7 +41,12 @@ if __name__ == '__main__':
     gpsp.start() 
 
     # start it up
-    while True:
+    while True:       
+      sensorID = "NEO-6M"
+
+      # current time and date
+      currentTime = datetime.datetime.now().time().replace(second = 0, microsecond = 0)
+      dateToday = datetime.datetime.now().date().strftime("%d-%m-%Y")
           
       #It may take a second or two to get good data
       #print gpsd.fix.latitude,', ',gpsd.fix.longitude,'  Time: ',gpsd.utc
@@ -66,36 +71,52 @@ if __name__ == '__main__':
       print
       print 'sats        ' , gpsd.satellites
 
+      currentTime = str (currentTime)
+      dateToday = str (dateToday)
+
       #Creating connection with local server
-      conn = httplib.HTTPConnection("192.168.0.199:8001")
-      headers = {'Content-type': 'application/json'}
-
-      #Making the data ready
-      foo = {'lat': gpsd.fix.latitude,
-      'lng': gpsd.fix.longitude
-      }
-
-      
       try:
+        conn = httplib.HTTPConnection("192.168.0.199:8001")
+        headers = {'Content-type': 'application/json'}
+        foo = {'lat': gpsd.fix.latitude,
+        'lng': gpsd.fix.longitude,'sensorID': sensorID,'time': currentTime,'date': dateToday,'flag': 1
+        }
+
         json_foo = json.dumps(foo)
-        #POST data on local server.
-        conn.request("POST", "/location", json_foo, headers)
-        response = conn.getresponse()
-        print response.status, response.reason
-        data = response.read()
-        data
-        conn.close()
-        # GPS coordinates after every 2 seconds
-        time.sleep(2)
+        if gpsd.fix.latitude != 0 and gpsd.fix.longitude != 0: 
+          conn.request("POST", "/location", json_foo, headers)
+          response = conn.getresponse()
+          print response.status, response.reason
+          data = response.read()
+          print json.dumps(data, sort_keys = True, indent = 4, separators= (',', ': '))
+          conn.close()
+
+          # Update lat, lng after every minute
+          time.sleep(60)
               
-      except: 
-        print 'Server not ready.'
-        sys.exit()
+    except:
+      print 'Server not ready.', sys.exc_info()
+      sys.exit()
  
   except (KeyboardInterrupt, SystemExit):
-  #when you press ctrl+c
-    print "\nKilling Thread..."
-    gpsp.running = False
-    gpsp.join()
-  # wait for the thread to finish what it's doing
-  print "Done.\nExiting."
+
+        # Connection with Local server
+        conn = httplib.HTTPConnection("192.168.0.199:8001")
+        
+        # POST flag for end of transmission from GPS.
+        flag = {'flag': 0
+        }
+
+        json_flag = json.dumps(flag)
+        conn.request("POST", "/location", json_flag, headers)
+        response = conn.getresponse()
+        print response.status, response.reason
+        reply = response.read()
+        conn.close()
+        print "\nKilling Thread..."
+        gpsp.running = False
+        gpsp.join()
+        
+        
+      # wait for the thread to finish what it's doing
+        print "Done.\nExiting."
