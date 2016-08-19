@@ -1,11 +1,14 @@
 {
   "name": "brt-googlemaps",
   "version": "1.0.0",
-  "description": "Integration of GSM with Google Maps",
+  "description": "Integration of GPS with Google Maps",
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.15.2",
-    "express": "^4.14.0"
+    "express": "^4.14.0",
+    "google-distance": "^1.0.1",
+    "sequelize": "^3.24.0",
+    "sqlite3": "^3.1.4"
   },
   "devDependencies": {},
   "scripts": {
