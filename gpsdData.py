@@ -1,92 +1,101 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var distance = require('google-distance');
-var db = require('./db.js');
+import os
+from gps import *
+from time import *
+import time
+import threading
+import httplib
+import json
+import sys
+from subprocess import call
 
-var app = express();
-var server = require('http').createServer(app);
-distance.apiKey = 'AIzaSyBSA_hN9-v-wGyRwvXHNSuk7DxTCSnOpbM';
+# GPS Settings
+call (['sudo', 'gpsd', '-F', '/var/run/gpsd.sock', '/dev/ttyAMA0'])
+#seting the global variable
+gpsd = None
+ 
+#clear the terminal (optional)
+os.system('clear') 
 
-app.use(bodyParser.json());
-app.use(express.static('public'));
+class GpsPoller(threading.Thread):
+  def __init__(self):
+    threading.Thread.__init__(self)
+    #bring it in scope
+    global gpsd 
+    #starting the stream of info
+    gpsd = gps(mode=WATCH_ENABLE) 
+    self.current_value = None
+    self.running = True 
+    #setting the thread running to true
+ 
+  def run(self):
+    global gpsd
+    while gpsp.running:
+      gpsd.next() 
 
-var data = {};
+#this will continue to loop and grab EACH set of gpsd info to clear the buffer 
+if __name__ == '__main__':
+  gpsp = GpsPoller()
+  
+  # create the thread
+  try:
+    gpsp.start() 
 
-app.get('/', function (req, res) {
-  res.status(200).send('Welcome');
-});
+    # start it up
+    while True:
+          
+      #It may take a second or two to get good data
+      #print gpsd.fix.latitude,', ',gpsd.fix.longitude,'  Time: ',gpsd.utc
+ 
+      os.system('clear')
+ 
+      print
+      print ' GPS reading'
+      print '----------------------------------------'
+      print 'latitude    ' , gpsd.fix.latitude
+      print 'longitude   ' , gpsd.fix.longitude
+      print 'time utc    ' , gpsd.utc,' + ', gpsd.fix.time
+      print 'altitude (m)' , gpsd.fix.altitude
+      print 'eps         ' , gpsd.fix.eps
+      print 'epx         ' , gpsd.fix.epx
+      print 'epv         ' , gpsd.fix.epv
+      print 'ept         ' , gpsd.fix.ept
+      print 'speed (m/s) ' , gpsd.fix.speed
+      print 'climb       ' , gpsd.fix.climb
+      print 'track       ' , gpsd.fix.track
+      print 'mode        ' , gpsd.fix.mode
+      print
+      print 'sats        ' , gpsd.satellites
 
-//GET Request for latLng.
-app.get('/location/', function (req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.send(data);
+      #Creating connection with local server
+      conn = httplib.HTTPConnection("192.168.0.199:8001")
+      headers = {'Content-type': 'application/json'}
 
-}, function (e) {
-  res.status(400).json(e);
-});
+      #Making the data ready
+      foo = {'lat': gpsd.fix.latitude,
+      'lng': gpsd.fix.longitude
+      }
 
-// POST request for latLng.
-app.post('/location/', function (req, res) {
-  if (req.body.flag) {
-    data.sensorID = req.body.sensorID;
-    data.lat = req.body.lat;
-    data.lng = req.body.lng;
-    data.time = req.body.time;
-    data.date = req.body.date;
-
-    if (isNaN(data.lat))
-      data.lat = JSON.parse(data.lat(/\bNaN\b/g, "null"));
-
-    if (isNaN(data.lng))
-      data.lng = JSON.parse(data.lng(/\bNaN\b/g, "null"));
-
-    console.log(JSON.stringify(data, undefined, 2));
-
-    // INSERT data in waypoints table. 
-    db.wayPoints.create(data).then(function (wayPoint) {
-      res.json(wayPoint.toJSON());
-    }, function (e) {
-      res.status(400).json(e);
-    });
-  }
-
-  // When transmission is ended by GPS.
-  else {
-    console.log('Flag: ' + req.body.flag);
-
-    // Last (lat, lng) for in the database.
-    db.wayPoints.max('id').then(function (lastID) {
-      db.wayPoints.findOne({ where: { id: lastID } }).
-        then(function (wayPointLast) {
-
-          // Initial (lat, lng) for in the database.
-          db.wayPoints.findOne({ where: { id: 1 } }).
-            then(function (wayPointFirst) {
-
-              // Calculate distance covered for the whole day. 
-              distance.get(
-                {
-                  index: 1,
-                  origin: wayPointFirst.lat + ', ' + wayPointFirst.lng,
-                  destination: wayPointLast.lat + ', ' + wayPointLast.lng,
-                  sensor: true
-                },
-                function (err, data) {
-                  if (err) return console.log(err);
-                  console.log('Distance covered since the GPS went on: ' + data.distance);
-                });
-            });
-        });
-    });
-    res.status(200).send('Flag received');
-  }
-});
-
-db.database.sync({ force: true }).then(function () {
-  server.listen(8000, '127.0.0.1', function () {
-    server.close(function () {
-      server.listen(8001, '192.168.0.199');
-      console.log('Server running on 192.168.0.199');
-    });
-  });
-});
+      
+      try:
+        json_foo = json.dumps(foo)
+        #POST data on local server.
+        conn.request("POST", "/location", json_foo, headers)
+        response = conn.getresponse()
+        print response.status, response.reason
+        data = response.read()
+        data
+        conn.close()
+        # GPS coordinates after every 2 seconds
+        time.sleep(2)
+              
+      except: 
+        print 'Server not ready.'
+        sys.exit()
+ 
+  except (KeyboardInterrupt, SystemExit):
+  #when you press ctrl+c
+    print "\nKilling Thread..."
+    gpsp.running = False
+    gpsp.join()
+  # wait for the thread to finish what it's doing
+  print "Done.\nExiting."
